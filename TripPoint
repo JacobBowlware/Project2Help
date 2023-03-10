@@ -1,0 +1,165 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
+/**
+ * 
+ * @author jacobbowlware
+ *
+ */
+public class TripPoint {
+	private double lat;
+	private double lon;
+	private int time;
+	private static ArrayList<TripPoint> trip = new ArrayList<TripPoint>();
+	
+	/**
+	 * Contructs a new TripPoint object.
+	 * 
+	 * @param time Time when the measurements were taken.
+	 * @param lat  Latitude measurement of the TripPoint.
+	 * @param lon  Longitude measurement of the TripPoint.
+	 */
+	public TripPoint(int time, double lat, double lon) {
+		this.lat = lat;
+		this.lon = lon;
+		this.time = time;
+	}
+	
+	/**
+	 * 
+	 * @return Time when the measurements were taken.
+	 */
+	public int getTime() {
+		return time;
+	}
+	
+	/**
+	 * 
+	 * @return  Latitude measurement of the TripPoint.
+	 */
+	public double getLat() {
+		return lat;
+	}
+	
+	/**
+	 * 
+	 * @return  Longitude measurement of the TripPoint.
+	 */
+	public double getLon() {
+		return lon;
+	}
+	
+	/**
+	 * Loop throughs all TripPoint points and returns a copy of the entire ArrayList of points.
+	 * 
+	 * @return  Copy of TripPoint ArrayList 'trip'.
+	 */
+	public static ArrayList<TripPoint> getTrip() {
+		ArrayList<TripPoint> tripCopy = new ArrayList<TripPoint>(trip);
+	    return tripCopy;
+	}
+	
+	/**
+	 * Uses the Haversine Distance formula to calculate the distance between two 
+	 * TripPoints in kilometers.
+	 * 
+	 * @param a  First TripPoint location.
+	 * @param b  Second TripPoint location.
+	 * @return  Double measurement of the distance between the two points in kilometers.
+	 */
+	public static double haversineDistance(TripPoint a, TripPoint b) {
+		final double R = 6371; // radius of the earth in km
+	    double lat1 = Math.toRadians(a.getLat());
+	    double lat2 = Math.toRadians(b.getLat());
+	    double lon1 = Math.toRadians(a.getLon());
+	    double lon2 = Math.toRadians(b.getLon());
+
+	    double deltaLat = lat2 - lat1;
+	    double deltaLon = lon2 - lon1;
+
+	    double a1 = Math.pow(Math.sin(deltaLat/2),2) + Math.cos(lat1) * Math.cos(lat2) * Math.pow(Math.sin(deltaLon/2),2);
+	    double a2 = 2 * Math.atan2(Math.sqrt(a1), Math.sqrt(1-a1));
+	    double distance = R * a2;
+
+	    return distance;
+	}
+	
+	/**
+	 * Takes in two TripPoint objects and calculates the average speed between the two, in Kilometeres / Hour.
+	 * 
+	 * @param a  Start or end TripPoint object.
+	 * @param b  Start or end TripPoint object.
+	 * @return  The average speed between the two TripPoints, in Kilometers / Hour
+	 */
+	public static double avgSpeed(TripPoint a, TripPoint b) {
+		// Get total distance and time difference between the two points
+		double distance = haversineDistance(a, b);
+		int timeDif = Math.abs(a.getTime() - b.getTime());
+		
+		// Change the units to Kilometers / Hour
+		double denominatorChange = 60.0 / timeDif;
+		
+		return (distance * denominatorChange);
+	}
+	/** 
+	 * 
+	 * @return  The total time of the entire trip, in hours.
+	 */
+	public static double totalTime() {
+		double totalTime = trip.get(trip.size() - 1).getTime() / 60.0;
+		return totalTime;
+	}
+	
+	/**
+	 * Loop between each TripPoint in ArrayList and calculate total distance in kilometers.
+	 * 
+	 * @return  The total distance traveled in the entire trip, in kilometers.
+	 */
+	public static double totalDistance() {
+		double total = 0.0;
+		
+		// Loop through each point
+		for (int i = 0; i < trip.size() - 1; ++i) {
+			
+			// Get the haversineDistance, add it to the total
+			total += haversineDistance(trip.get(i), trip.get(i + 1));
+		}
+		
+		
+		return total;
+	}
+	
+	/**
+	 * Loops through File(filename) and adds a TripPoint object for each set of (time, lon, lat) into trip.
+	 * 
+	 * @param filename  Name of the csv file which contains the csv data
+	 * @throws FileNotFoundException  If given filename is not found in memory.
+	 */
+	public static void readFile(String filename) {
+        String line = "";
+        String csvSplitBy = ",";
+        
+        int time;
+        double lon;
+        double lat;
+        
+        // Loop through each line of triplog.csv and create a TripPoint obj to add to trip ArrayList.
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+        	// Skip over the first line of headers.
+        	br.readLine();
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(csvSplitBy);
+                time = Integer.parseInt(data[0]);
+                lon = Double.parseDouble(data[1]);
+                lat = Double.parseDouble(data[2]);
+                trip.add(new TripPoint(time, lat, lon));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+		
+	}
+}
