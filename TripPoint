@@ -153,8 +153,8 @@ public class TripPoint {
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(csvSplitBy);
                 time = Integer.parseInt(data[0]);
-                lon = Double.parseDouble(data[1]);
-                lat = Double.parseDouble(data[2]);
+                lon = Double.parseDouble(data[2]);
+                lat = Double.parseDouble(data[1]);
                 trip.add(new TripPoint(time, lat, lon));
             }
         } catch (IOException e) {
